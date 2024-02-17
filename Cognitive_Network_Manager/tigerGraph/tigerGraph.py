@@ -14,7 +14,6 @@ secret = config.tg_secret
 conn = tg.TigerGraphConnection(host=host, graphname=graphname, username=username, password=password)
 conn.apiToken = conn.getToken(secret)
 
-
 # This is where we are going to create the actual Tigergraph Schema - the code that represents each Vertex node (Entity), each Edge Node (Interaction), and each Event (relationship)
 def create_new_user_vertex(first_name, last_name, username, password, email, DOB):
     unique_id = uuid.uuid4()
@@ -37,20 +36,71 @@ def user_login(email, password):
     # print('RESULT: ', result[0]['User'])
     return result[0]
 
+def user_logout(id_value):
+    result = conn.runInstalledQuery("logoutUser", {"id_value": id_value})
+    return result
+
 def get_user_profile(id_value):
     result = conn.runInstalledQuery("getProfile", {"id_value": id_value})
     # print("RESULT: ", result)
     return result
 
-def create_new_pdf_vertex(pdf_name, pdf_path):
+def user_profile_delete(id_value):
+    result = conn.runInstalledQuery("deleteProfile", {"id_value": id_value})
+    return result
+
+def create_document_vertex(filename, user_id, upload_date):
     unique_id = uuid.uuid4()
-    pdf_id = f"P{str(unique_id)[:8]}"
+    document_id = f"D{str(unique_id)[:8]}"
     attributes = {
-        "pdf_name": pdf_name,
-        "pdf_path": pdf_path
+        "filename": filename,
+        "user_id": user_id,
+        "upload_date": upload_date,
+        "status": "Uploaded"
     }
-    conn.upsertVertex("PDF", pdf_id, attributes)
-    return(pdf_id)
+    
+    conn.upsertVertex("Document", document_id, attributes)
+    return document_id
+
+def document_processing_start(document_id):
+    attributes = {
+        "status": "Processing"
+    }
+    conn.upsertVertex("Document", document_id, attributes)
+
+def document_processing_complete(document_id, summary):
+    attributes = {
+        "status": "Processed",
+        "summary": summary  
+    }
+    conn.upsertVertex("Document", document_id, attributes)
+
+def create_gpt_agent_vertex():
+    unique_id = uuid.uuid4()
+    agent_id = f"GPT{str(unique_id)[:8]}"
+    attributes = {
+        "status": "Idle",  # Initial status of the GPT Agent
+        "last_active_time": None  # Track the last active time, update upon each action
+    }
+    conn.upsertVertex("GPT_Agent", agent_id, attributes)
+    return agent_id
+
+# Function to update GPT Agent status to Processing
+def gpt_agent_start_processing(agent_id):
+    attributes = {
+        "status": "Processing",
+        "last_active_time": "current_timestamp()"  # Placeholder for the actual timestamp
+    }
+    conn.upsertVertex("GPT_Agent", agent_id, attributes)
+
+# Function to log GPT Agent analysis result
+def gpt_agent_analysis_complete(agent_id, analysis_result):
+    attributes = {
+        "status": "Idle",  # Assuming it returns to Idle after processing
+        "last_active_time": "current_timestamp()",  # Update the timestamp
+        "analysis_result": analysis_result  # Store the analysis result
+    }
+    conn.upsertVertex("GPT_Agent", agent_id, attributes)
 
 def create_event(vertex1_id_list, vertex2_id_list, send_vertex, receive_vertex, send_edge_name, receive_edge_name, action):
     unique_id = uuid.uuid4()

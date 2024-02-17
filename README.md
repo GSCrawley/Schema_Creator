@@ -70,5 +70,10 @@
 
 ### By focusing on these components, you can build a streamlined MVP that demonstrates the core value proposition of your application—turning unstructured document text into structured, actionable data.
 
+# Resources for AI modeling:
+### Entity Extractor 
+<https://docs.haystack.deepset.ai/docs/entity_extractor>
+### Annotation Tool 
+<https://docs.haystack.deepset.ai/docs/annotation>
 
 
